@@ -563,15 +563,18 @@ async function loadStops() {
     // Fetch devices and trips in parallel
     const [devices, trips] = await Promise.all([
       apiGet('Device', {}),
-      apiGet('Trip',   { fromDate, toDate })
+      apiCall('Get', { typeName: 'Trip', search: { fromDate, toDate }, resultsLimit: 50000 })
     ]);
 
     // Build device lookup
     const devMap = {};
     (devices || []).forEach(d => { devMap[d.id] = d; });
 
-    // Filter: only trips where vehicle stopped for ≥60 seconds
-    const stops = (trips || []).filter(t => toSec(t.stopDuration) >= 60);
+    // Keep completed stops (≥60s) AND currently-active stops (stopDuration null/0 = vehicle still there)
+    const stops = (trips || []).filter(t => {
+      const sec = toSec(t.stopDuration);
+      return !t.stopDuration || sec === 0 || sec >= 60;
+    });
 
     if (!stops.length) {
       const dateStr = selDate.toLocaleDateString('pt-PT', {day:'2-digit', month:'long'});
@@ -618,7 +621,7 @@ async function loadStops() {
       const vName   = dev.name || '—';
       const stopped = new Date(trip.stop);
       const durSec  = toSec(trip.stopDuration);
-      const isLive  = durSec === 0;                    // still stopped
+      const isLive  = !trip.stopDuration || durSec === 0;  // still stopped
       const depart  = isLive ? null : new Date(stopped.getTime() + durSec * 1000);
       const addr    = resolveAddr(trip.stopPoint);
 
