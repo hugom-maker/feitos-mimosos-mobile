@@ -360,6 +360,7 @@ async function handleLogin(e) {
     };
     localStorage.setItem(SESS_KEY, JSON.stringify(sess));
     localStorage.setItem('fm_email', sess.userName);
+    localStorage.setItem('fm_pass',  pass);
     showApp();
     await loadDevices();
   } catch(ex) {
@@ -388,8 +389,12 @@ function showLogin() {
   document.getElementById('login').style.display = 'flex';
   document.getElementById('app').style.display   = 'none';
   const savedEmail = localStorage.getItem('fm_email');
-  if (savedEmail) {
-    document.getElementById('inp-email').value = savedEmail;
+  const savedPass  = localStorage.getItem('fm_pass');
+  if (savedEmail) document.getElementById('inp-email').value = savedEmail;
+  if (savedPass)  document.getElementById('inp-pass').value  = savedPass;
+  if (savedEmail && savedPass) {
+    setTimeout(() => document.getElementById('login-btn').focus(), 100);
+  } else if (savedEmail) {
     setTimeout(() => document.getElementById('inp-pass').focus(), 100);
   }
 }
