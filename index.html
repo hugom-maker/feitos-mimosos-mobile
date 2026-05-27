@@ -359,6 +359,7 @@ async function handleLogin(e) {
       server:    (res.path && res.path !== 'ThisServer') ? res.path : API_BASE
     };
     localStorage.setItem(SESS_KEY, JSON.stringify(sess));
+    localStorage.setItem('fm_email', sess.userName);
     showApp();
     await loadDevices();
   } catch(ex) {
@@ -372,6 +373,7 @@ function handleLogout() {
   localStorage.removeItem(SESS_KEY);
   sess = null;
   selDeviceId = null;
+  // keep fm_email so login form stays pre-filled after logout
   devices = [];
   document.getElementById('inp-email').value = '';
   document.getElementById('inp-pass').value = '';
@@ -385,6 +387,11 @@ function handleLogout() {
 function showLogin() {
   document.getElementById('login').style.display = 'flex';
   document.getElementById('app').style.display   = 'none';
+  const savedEmail = localStorage.getItem('fm_email');
+  if (savedEmail) {
+    document.getElementById('inp-email').value = savedEmail;
+    setTimeout(() => document.getElementById('inp-pass').focus(), 100);
+  }
 }
 function showApp() {
   document.getElementById('login').style.display = 'none';
