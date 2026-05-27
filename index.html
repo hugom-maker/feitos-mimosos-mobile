@@ -2,30 +2,30 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <!-- iOS PWA: hides Safari chrome, launches full-screen from home screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Feitos Mimosos">
-  <!-- Prevent auto-zoom on input focus (requires font-size >= 16px on inputs) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Feitos Mimosos — Paragens</title>
+  <title>Feitos Mimosos — Viagens</title>
 
   <style>
     :root {
-      --bg:        #0d0d0d;
-      --surface:   #1a1a1a;
-      --card:      #232323;
-      --card2:     #2a2a2a;
-      --accent:    #FFD700;
-      --accent-dim:#A38900;
-      --text:      #FFFFFF;
-      --text2:     #BBBBBB;
-      --text3:     #777777;
-      --danger:    #FF5555;
-      --ok:        #55FF99;
-      --border:    #333333;
-      --touch:     56px;   /* iOS minimum tap target */
-      --radius:    14px;
+      --bg:      #0d0d0d;
+      --surface: #1a1a1a;
+      --card:    #232323;
+      --card2:   #1e1e1e;
+      --accent:  #FFD700;
+      --text:    #FFFFFF;
+      --text2:   #BBBBBB;
+      --text3:   #666666;
+      --danger:  #FF5555;
+      --ok:      #44DD88;
+      --border:  #333333;
+      --trip-border: #FFD700;
+      --stop-border: #555555;
+      --live-border: #44DD88;
+      --touch:   56px;
+      --radius:  14px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -36,12 +36,10 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
       font-size: 17px;
-      line-height: 1.45;
-      /* Smooth scrolling on iOS */
       -webkit-overflow-scrolling: touch;
     }
 
-    /* ── LOGIN ────────────────────────────────────────── */
+    /* ── LOGIN ────────────────────────────────────── */
     #login {
       display: flex;
       flex-direction: column;
@@ -53,45 +51,21 @@
       padding-top: max(40px, env(safe-area-inset-top));
       gap: 32px;
     }
-
     .brand { text-align: center; }
-    .brand-name {
-      font-size: 30px;
-      font-weight: 800;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-    }
-    .brand-sub {
-      font-size: 15px;
-      color: var(--text2);
-      margin-top: 4px;
-    }
+    .brand-name { font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .brand-sub  { font-size: 15px; color: var(--text2); margin-top: 4px; }
 
-    .login-form {
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
+    .login-form { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; }
     .field-wrap { display: flex; flex-direction: column; gap: 8px; }
-    .field-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
+    .field-label { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; }
 
-    input[type="email"],
-    input[type="password"] {
+    input[type="email"], input[type="password"] {
       height: var(--touch);
       background: var(--surface);
       border: 2px solid var(--border);
       border-radius: var(--radius);
       color: var(--text);
-      font-size: 17px; /* ≥16px prevents iOS auto-zoom */
+      font-size: 17px;
       padding: 0 18px;
       outline: none;
       width: 100%;
@@ -101,275 +75,181 @@
     input:focus { border-color: var(--accent); }
 
     .btn {
-      height: 62px;
-      border: none;
-      border-radius: var(--radius);
-      font-size: 19px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.15s;
-      -webkit-appearance: none;
+      height: 62px; border: none; border-radius: var(--radius);
+      font-size: 19px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.15s; -webkit-appearance: none;
     }
     .btn:active { opacity: 0.75; }
     .btn-primary { background: var(--accent); color: #000; width: 100%; margin-top: 6px; }
     .btn:disabled { opacity: 0.5; cursor: default; }
+    .login-err { min-height: 22px; color: var(--danger); font-size: 15px; text-align: center; }
 
-    .login-err {
-      min-height: 22px;
-      color: var(--danger);
-      font-size: 15px;
-      text-align: center;
-    }
+    /* ── APP SHELL ────────────────────────────────── */
+    #app { display: none; flex-direction: column; height: 100vh; height: -webkit-fill-available; }
 
-    /* ── APP SHELL ────────────────────────────────────── */
-    #app {
-      display: none;
-      flex-direction: column;
-      height: 100vh;
-      height: -webkit-fill-available;
-    }
-
-    /* ── HEADER ───────────────────────────────────────── */
+    /* ── HEADER ───────────────────────────────────── */
     .header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 14px 20px 14px;
+      padding: 14px 16px 12px;
       padding-top: max(14px, env(safe-area-inset-top));
       flex-shrink: 0;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-    }
-
-    .header-row1 {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .header-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-
-    .logout-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text3);
-      font-size: 13px;
-      padding: 6px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      min-height: 36px;
-    }
-    .logout-btn:active { color: var(--text); border-color: var(--text2); }
-
-    /* ── DATE NAV ─────────────────────────────────────── */
-    .date-nav {
-      display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 10px;
     }
 
+    .header-row1 { display: flex; align-items: center; justify-content: space-between; }
+    .header-title { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .logout-btn {
+      background: none; border: 1px solid var(--border); color: var(--text3);
+      font-size: 13px; padding: 6px 14px; border-radius: 8px; cursor: pointer; min-height: 36px;
+    }
+    .logout-btn:active { color: var(--text); border-color: var(--text2); }
+
+    /* ── DATE NAV ─────────────────────────────────── */
+    .date-nav { display: flex; align-items: center; gap: 10px; }
     .day-btn {
-      width: var(--touch);
-      height: var(--touch);
-      flex-shrink: 0;
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      color: var(--text);
-      font-size: 26px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.12s, border-color 0.12s;
-      -webkit-appearance: none;
+      width: var(--touch); height: var(--touch); flex-shrink: 0;
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 26px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, border-color 0.12s; -webkit-appearance: none;
     }
     .day-btn:active { background: var(--accent); border-color: var(--accent); color: #000; }
     .day-btn:disabled { opacity: 0.3; cursor: default; }
 
-    /* Date display — wraps a transparent <input type="date"> overlay */
     .date-center {
-      flex: 1;
-      position: relative;
-      height: var(--touch);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--card);
-      border: 2px solid var(--border);
-      border-radius: 12px;
-      cursor: pointer;
-      overflow: hidden;
+      flex: 1; position: relative; height: var(--touch);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; cursor: pointer; overflow: hidden;
     }
     .date-center:active { border-color: var(--accent); }
-
-    .date-text {
-      text-align: center;
-      pointer-events: none;
-    }
-    .date-main {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      line-height: 1.1;
-    }
-    .date-full {
-      font-size: 12px;
-      color: var(--text2);
-      margin-top: 2px;
-    }
-
-    /* Invisible date input floated over the whole date-center area */
+    .date-text { text-align: center; pointer-events: none; }
+    .date-main { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.1; }
+    .date-full { font-size: 12px; color: var(--text2); margin-top: 2px; }
     #date-picker {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; font-size: 17px;
+      -webkit-appearance: none; border: none; background: none;
+    }
+
+    /* ── VEHICLE SELECTOR ─────────────────────────── */
+    .veh-wrap { position: relative; }
+    .veh-select {
+      width: 100%; height: var(--touch);
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 17px;
+      padding: 0 44px 0 16px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
       cursor: pointer;
-      font-size: 17px;
-      -webkit-appearance: none;
-      border: none;
-      background: none;
     }
+    .veh-select:focus { border-color: var(--accent); }
+    .veh-select option { background: #1a1a1a; color: #fff; }
 
-    /* ── SCROLL BODY ──────────────────────────────────── */
-    .stops-body {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 16px 16px;
+    /* ── SCROLL BODY ──────────────────────────────── */
+    .hist-body {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 14px;
       padding-bottom: max(24px, env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex; flex-direction: column; gap: 8px;
     }
 
-    /* ── SUMMARY BAR ──────────────────────────────────── */
+    /* ── SUMMARY BAR ──────────────────────────────── */
     .summary {
-      font-size: 13px;
-      color: var(--text2);
-      padding: 2px 2px;
+      background: var(--surface); border-radius: var(--radius);
+      padding: 14px 12px; display: flex; justify-content: space-between; gap: 6px;
     }
+    .sum-item { text-align: center; flex: 1; }
+    .sum-val { font-size: 20px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+    .sum-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
 
-    /* ── STOP CARD ────────────────────────────────────── */
-    .stop-card {
+    /* ── TRIP SEGMENT ─────────────────────────────── */
+    .trip-seg {
       background: var(--card);
       border: 1px solid var(--border);
+      border-left: 4px solid var(--trip-border);
       border-radius: var(--radius);
-      overflow: hidden;
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
     }
+    .seg-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--text3);
+    }
+    .trip-timerow {
+      font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; line-height: 1.1;
+    }
+    .t-arrow { color: var(--text3); font-weight: 400; margin: 0 6px; }
+    .trip-metrics { font-size: 15px; color: var(--text2); }
+    .trip-metrics b { color: var(--accent); }
 
-    .stop-card-top {
-      padding: 14px 16px 12px;
+    /* ── STOP SEGMENT ─────────────────────────────── */
+    .stop-seg {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--stop-border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
     }
+    .stop-addr { font-size: 15px; color: var(--text); line-height: 1.35; }
+    .stop-timing { font-size: 14px; color: var(--text2); }
+    .stop-timing .dur { color: var(--accent); font-weight: 700; }
 
-    .stop-vehicle {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--accent);
-      margin-bottom: 6px;
+    /* ── LIVE SEGMENT ─────────────────────────────── */
+    .live-seg {
+      background: #0b2218;
+      border: 1px solid #1a4432;
+      border-left: 4px solid var(--live-border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
     }
+    .live-row { display: flex; align-items: center; gap: 10px; }
+    .live-title { font-size: 17px; font-weight: 800; color: var(--ok); }
+    .live-badge {
+      font-size: 12px; font-weight: 800; background: var(--ok); color: #000;
+      padding: 3px 8px; border-radius: 5px;
+    }
+    .live-detail { font-size: 14px; color: var(--text2); }
 
-    .stop-address {
-      font-size: 15px;
-      color: var(--text);
-      line-height: 1.35;
-    }
-    .stop-address.loading { color: var(--text3); font-style: italic; }
-
-    /* Three-column time row */
-    .stop-times {
-      display: flex;
-      align-items: stretch;
-      border-top: 1px solid var(--border);
-    }
-
-    .time-col {
-      flex: 1;
-      padding: 11px 10px;
-      text-align: center;
-    }
-    .time-col + .time-col { border-left: 1px solid var(--border); }
-
-    .tc-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text3);
-      margin-bottom: 5px;
-    }
-    .tc-value {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-    }
-    .tc-value.accent { color: var(--accent); font-size: 18px; }
-    .tc-value.live {
-      color: var(--ok);
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    /* ── LOADING / EMPTY / ERROR ─────────────────────── */
+    /* ── LOADING / EMPTY / ERROR ──────────────────── */
     .center-msg {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 20px;
-      gap: 14px;
-      text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px; gap: 14px; text-align: center;
     }
-
     .spinner {
-      width: 44px;
-      height: 44px;
-      border: 4px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
+      width: 44px; height: 44px;
+      border: 4px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.75s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
     .msg-icon { font-size: 46px; }
     .msg-title { font-size: 18px; font-weight: 700; color: var(--text); }
-    .msg-sub { font-size: 14px; color: var(--text2); }
-    .msg-err { color: var(--danger); font-size: 14px; }
-
+    .msg-sub   { font-size: 14px; color: var(--text2); }
+    .msg-err   { color: var(--danger); font-size: 14px; }
     .retry-btn {
-      margin-top: 8px;
-      padding: 14px 32px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      font-size: 17px;
-      font-weight: 800;
-      cursor: pointer;
-      min-height: var(--touch);
+      margin-top: 8px; padding: 14px 32px;
+      background: var(--accent); color: #000; border: none;
+      border-radius: 12px; font-size: 17px; font-weight: 800;
+      cursor: pointer; min-height: var(--touch);
     }
   </style>
 </head>
 <body>
 
-<!-- ────────────────── LOGIN SCREEN ────────────────── -->
+<!-- ─── LOGIN ─────────────────────────────────────── -->
 <div id="login">
   <div class="brand">
     <div class="brand-name">Feitos Mimosos</div>
-    <div class="brand-sub">Histórico de Paragens</div>
+    <div class="brand-sub">Histórico de Viagens</div>
   </div>
-
   <form class="login-form" id="login-form" onsubmit="handleLogin(event)" novalidate>
     <div class="field-wrap">
       <label class="field-label" for="inp-email">Email</label>
@@ -381,65 +261,66 @@
       <input type="password" id="inp-pass" autocomplete="current-password"
              placeholder="••••••••" required>
     </div>
-
     <div class="login-err" id="login-err" role="alert" aria-live="polite"></div>
-
     <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
   </form>
 </div>
 
-<!-- ────────────────── APP SCREEN ──────────────────── -->
+<!-- ─── APP ───────────────────────────────────────── -->
 <div id="app">
-
   <div class="header">
     <div class="header-row1">
       <div class="header-title">Feitos Mimosos</div>
       <button class="logout-btn" onclick="handleLogout()">Sair</button>
     </div>
 
-    <div class="date-nav" role="navigation" aria-label="Seleção de data">
-      <button class="day-btn" id="prev-btn"
-              onclick="shiftDate(-1)" aria-label="Dia anterior">‹</button>
-
+    <div class="date-nav">
+      <button class="day-btn" id="prev-btn" onclick="shiftDate(-1)" aria-label="Dia anterior">‹</button>
       <div class="date-center" role="button" aria-label="Abrir seletor de data">
         <div class="date-text">
           <div class="date-main" id="date-main">Hoje</div>
           <div class="date-full" id="date-full"></div>
         </div>
-        <!-- Transparent date input overlaid on date-center; native iOS picker on tap -->
         <input type="date" id="date-picker" aria-label="Selecionar data"
                onchange="handlePickerChange(this.value)">
       </div>
+      <button class="day-btn" id="next-btn" onclick="shiftDate(1)" aria-label="Próximo dia">›</button>
+    </div>
 
-      <button class="day-btn" id="next-btn"
-              onclick="shiftDate(1)" aria-label="Próximo dia">›</button>
+    <div class="veh-wrap">
+      <select id="veh-select" class="veh-select"
+              onchange="handleVehicleChange(this.value)"
+              aria-label="Selecionar veículo">
+        <option value="">A carregar veículos...</option>
+      </select>
     </div>
   </div>
 
-  <div class="stops-body" id="stops-body">
+  <div class="hist-body" id="hist-body">
     <div class="center-msg">
       <div class="spinner"></div>
       <div class="msg-sub">A carregar...</div>
     </div>
   </div>
-
 </div>
 
 <script>
 'use strict';
 
-// ── CONFIG ─────────────────────────────────────────────────────────────────
+// ── CONFIG ──────────────────────────────────────────────────────────────────
 const DB       = 'feit02';
-const SESS_KEY = 'fm_sess_v3'; // bumped to clear sessions with wrong server path
+const SESS_KEY = 'fm_sess_v3';
 const ADDR_KEY = 'fm_addr_v2';
-const API_BASE = 'my.geotab.com'; // overridden by auth response path
+const API_BASE = 'my.geotab.com';
 
-// ── STATE ──────────────────────────────────────────────────────────────────
-let sess     = null;   // {userName, sessionId, database, server}
-let selDate  = today();
-let addrMap  = {};     // "x,y" → formatted address string
+// ── STATE ───────────────────────────────────────────────────────────────────
+let sess        = null;
+let selDate     = today();
+let selDeviceId = null;
+let devices     = [];
+let addrMap     = {};
 
-// ── BOOTSTRAP ──────────────────────────────────────────────────────────────
+// ── BOOTSTRAP ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   try { addrMap = JSON.parse(localStorage.getItem(ADDR_KEY) || '{}'); } catch(_) {}
 
@@ -448,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       sess = JSON.parse(raw);
       showApp();
-      await loadStops();
+      await loadDevices();
       return;
     } catch(_) { sess = null; }
   }
@@ -479,7 +360,7 @@ async function handleLogin(e) {
     };
     localStorage.setItem(SESS_KEY, JSON.stringify(sess));
     showApp();
-    await loadStops();
+    await loadDevices();
   } catch(ex) {
     err.textContent = 'Email ou palavra-passe incorretos. Tente novamente.';
     btn.textContent = 'Entrar';
@@ -490,6 +371,8 @@ async function handleLogin(e) {
 function handleLogout() {
   localStorage.removeItem(SESS_KEY);
   sess = null;
+  selDeviceId = null;
+  devices = [];
   document.getElementById('inp-email').value = '';
   document.getElementById('inp-pass').value = '';
   document.getElementById('login-err').textContent = '';
@@ -498,7 +381,7 @@ function handleLogout() {
   showLogin();
 }
 
-// ── SCREEN SWITCHING ────────────────────────────────────────────────────────
+// ── SCREENS ─────────────────────────────────────────────────────────────────
 function showLogin() {
   document.getElementById('login').style.display = 'flex';
   document.getElementById('app').style.display   = 'none';
@@ -511,18 +394,15 @@ function showApp() {
 
 // ── DATE NAV ────────────────────────────────────────────────────────────────
 function today() {
-  const d = new Date();
-  d.setHours(0,0,0,0);
-  return d;
+  const d = new Date(); d.setHours(0,0,0,0); return d;
 }
 
 function shiftDate(delta) {
-  const d = new Date(selDate);
-  d.setDate(d.getDate() + delta);
-  if (d > today()) return;          // no future
+  const d = new Date(selDate); d.setDate(d.getDate() + delta);
+  if (d > today()) return;
   selDate = d;
   renderDateHeader();
-  loadStops();
+  loadHistory();
 }
 
 function handlePickerChange(val) {
@@ -532,155 +412,278 @@ function handlePickerChange(val) {
   if (d > today()) return;
   selDate = d;
   renderDateHeader();
-  loadStops();
+  loadHistory();
 }
 
 function renderDateHeader() {
-  const t   = today();
+  const t    = today();
   const yest = new Date(t); yest.setDate(t.getDate() - 1);
   let label;
-  if (sameDay(selDate, t))    label = 'Hoje';
+  if (sameDay(selDate, t))         label = 'Hoje';
   else if (sameDay(selDate, yest)) label = 'Ontem';
   else label = selDate.toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
 
   document.getElementById('date-main').textContent = label;
   document.getElementById('date-full').textContent =
     selDate.toLocaleDateString('pt-PT', {weekday:'long', day:'2-digit', month:'long'});
-
   document.getElementById('date-picker').value = isoDate(selDate);
   document.getElementById('next-btn').disabled = sameDay(selDate, t);
 }
 
-// ── STOPS LOADER ─────────────────────────────────────────────────────────────
-async function loadStops() {
-  const body = document.getElementById('stops-body');
-  body.innerHTML = `<div class="center-msg"><div class="spinner"></div><div class="msg-sub">A carregar paragens...</div></div>`;
-
+// ── VEHICLES ────────────────────────────────────────────────────────────────
+async function loadDevices() {
+  const sel = document.getElementById('veh-select');
   try {
-    const fromDate = localMidnight(selDate).toISOString();
-    const toDate   = new Date(localMidnight(selDate).getTime() + 86400000 - 1).toISOString();
+    const devs = await apiGet('Device', {});
+    devices = (devs || [])
+      .filter(d => d.name && d.name.trim())
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt'));
 
-    // Fetch devices and trips in parallel
-    const [devices, trips] = await Promise.all([
-      apiGet('Device', {}),
-      apiCall('Get', { typeName: 'Trip', search: { fromDate, toDate }, resultsLimit: 50000 })
-    ]);
-
-    // Build device lookup
-    const devMap = {};
-    (devices || []).forEach(d => { devMap[d.id] = d; });
-
-    // Keep completed stops (≥60s) AND currently-active stops (stopDuration null/0 = vehicle still there)
-    const stops = (trips || []).filter(t => {
-      const sec = toSec(t.stopDuration);
-      return !t.stopDuration || sec === 0 || sec >= 60;
+    sel.innerHTML = '<option value="">Selecionar veículo...</option>';
+    devices.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      sel.appendChild(opt);
     });
 
-    if (!stops.length) {
-      const dateStr = selDate.toLocaleDateString('pt-PT', {day:'2-digit', month:'long'});
-      body.innerHTML = `
-        <div class="center-msg">
-          <div class="msg-icon">🅿️</div>
-          <div class="msg-title">Sem paragens</div>
-          <div class="msg-sub">Nenhuma paragem registada para ${dateStr}</div>
-        </div>`;
-      return;
+    // Restore last selected vehicle
+    const lastVeh = localStorage.getItem('fm_last_veh');
+    if (lastVeh && devices.find(d => d.id === lastVeh)) {
+      sel.value = lastVeh;
+      selDeviceId = lastVeh;
+      await loadHistory();
+    } else {
+      showPrompt();
     }
-
-    // Sort: most recent arrival first
-    stops.sort((a, b) => new Date(b.stop) - new Date(a.stop));
-
-    // Collect coordinates needing address resolution
-    const needAddr = stops
-      .filter(t => t.stopPoint?.x != null && !addrMap[coordKey(t.stopPoint)])
-      .map(t => ({ x: t.stopPoint.x, y: t.stopPoint.y }));
-
-    if (needAddr.length) {
-      try {
-        const addrs = await apiCall('GetAddresses', { coordinates: needAddr });
-        (addrs || []).forEach((a, i) => {
-          const key = `${needAddr[i].x.toFixed(5)},${needAddr[i].y.toFixed(5)}`;
-          addrMap[key] = (a?.formattedAddress) || null;
-        });
-        localStorage.setItem(ADDR_KEY, JSON.stringify(addrMap));
-      } catch(_) { /* addresses best-effort */ }
-    }
-
-    // Render
-    const fragment = document.createDocumentFragment();
-
-    const summary = document.createElement('div');
-    summary.className = 'summary';
-    summary.setAttribute('role','status');
-    summary.textContent = `${stops.length} paragem${stops.length !== 1 ? 's' : ''} · ${
-      selDate.toLocaleDateString('pt-PT', {weekday:'long', day:'2-digit', month:'long'})}`;
-    fragment.appendChild(summary);
-
-    stops.forEach(trip => {
-      const dev     = devMap[trip.device?.id] || {};
-      const vName   = dev.name || '—';
-      const stopped = new Date(trip.stop);
-      const durSec  = toSec(trip.stopDuration);
-      const isLive  = !trip.stopDuration || durSec === 0;  // still stopped
-      const depart  = isLive ? null : new Date(stopped.getTime() + durSec * 1000);
-      const addr    = resolveAddr(trip.stopPoint);
-
-      const card = document.createElement('div');
-      card.className = 'stop-card';
-      card.setAttribute('role','article');
-      card.setAttribute('aria-label',
-        `${vName}, ${addr}, chegada ${fmtTime(stopped)}, ${isLive ? 'em paragem' : 'saída ' + fmtTime(depart)}`);
-
-      card.innerHTML = `
-        <div class="stop-card-top">
-          <div class="stop-vehicle">${esc(vName)}</div>
-          <div class="stop-address">${esc(addr)}</div>
-        </div>
-        <div class="stop-times" role="group" aria-label="Horários">
-          <div class="time-col">
-            <div class="tc-label">Chegada</div>
-            <div class="tc-value">${fmtTime(stopped)}</div>
-          </div>
-          <div class="time-col">
-            <div class="tc-label">Duração</div>
-            <div class="tc-value ${isLive ? 'live' : 'accent'}">${isLive ? 'Em paragem' : fmtDur(durSec)}</div>
-          </div>
-          <div class="time-col">
-            <div class="tc-label">Saída</div>
-            <div class="tc-value">${depart ? fmtTime(depart) : '—'}</div>
-          </div>
-        </div>`;
-      fragment.appendChild(card);
-    });
-
-    body.innerHTML = '';
-    body.appendChild(fragment);
-
   } catch(ex) {
-    // Session expired → back to login
-    if (/InvalidUserException|NotAuthorizedException|DbUnavailable/i.test(ex.message || '')) {
-      localStorage.removeItem(SESS_KEY);
-      sess = null;
-      showLogin();
-      document.getElementById('login-err').textContent = 'Sessão expirada. Inicie sessão novamente.';
-      return;
-    }
-    body.innerHTML = `
-      <div class="center-msg">
-        <div class="msg-icon">⚠️</div>
-        <div class="msg-title">Erro ao carregar</div>
-        <div class="msg-err">${esc(ex.message || 'Erro desconhecido')}</div>
-        <button class="retry-btn" onclick="loadStops()">Tentar novamente</button>
-      </div>`;
+    sel.innerHTML = '<option value="">Erro ao carregar veículos</option>';
+    handleApiError(ex);
   }
 }
 
-// ── GEOTAB API ──────────────────────────────────────────────────────────────
+function handleVehicleChange(id) {
+  selDeviceId = id || null;
+  if (selDeviceId) {
+    localStorage.setItem('fm_last_veh', selDeviceId);
+    loadHistory();
+  } else {
+    showPrompt();
+  }
+}
+
+function showPrompt() {
+  document.getElementById('hist-body').innerHTML = `
+    <div class="center-msg">
+      <div class="msg-icon">🚗</div>
+      <div class="msg-title">Selecione um veículo</div>
+      <div class="msg-sub">para ver o histórico de viagens</div>
+    </div>`;
+}
+
+// ── HISTORY LOADER ───────────────────────────────────────────────────────────
+async function loadHistory() {
+  if (!selDeviceId) { showPrompt(); return; }
+  const body = document.getElementById('hist-body');
+  body.innerHTML = `<div class="center-msg"><div class="spinner"></div><div class="msg-sub">A carregar histórico...</div></div>`;
+
+  try {
+    const fromDate  = localMidnight(selDate).toISOString();
+    const toDate    = new Date(localMidnight(selDate).getTime() + 86400000 - 1).toISOString();
+    const isToday   = sameDay(selDate, today());
+
+    // Fetch trips and (if today) current device status in parallel
+    const [trips, statusArr] = await Promise.all([
+      apiCall('Get', {
+        typeName: 'Trip',
+        search: { deviceSearch: { id: selDeviceId }, fromDate, toDate },
+        resultsLimit: 1000
+      }),
+      isToday
+        ? apiCall('Get', {
+            typeName: 'DeviceStatusInfo',
+            search:   { deviceSearch: { id: selDeviceId } }
+          }).catch(() => [])
+        : Promise.resolve([])
+    ]);
+
+    const statusInfo = (statusArr || [])[0] || null;
+    const sortedTrips = (trips || []).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    if (!sortedTrips.length && !statusInfo) {
+      body.innerHTML = `
+        <div class="center-msg">
+          <div class="msg-icon">🗓️</div>
+          <div class="msg-title">Sem viagens</div>
+          <div class="msg-sub">Nenhuma viagem registada para ${
+            selDate.toLocaleDateString('pt-PT', {weekday:'long', day:'2-digit', month:'long'})
+          }</div>
+        </div>`;
+      return;
+    }
+
+    // ── Collect all coordinates for batch address resolution ──────────────
+    const coordQueue = []; // {x, y, key}
+    const enqueue = (x, y) => {
+      if (x == null || y == null) return;
+      const key = coordKey2(x, y);
+      if (!addrMap[key] && !coordQueue.find(c => c.key === key)) {
+        coordQueue.push({ x, y, key });
+      }
+    };
+
+    sortedTrips.forEach(t => {
+      if (t.stopPoint) enqueue(t.stopPoint.x, t.stopPoint.y);
+    });
+    if (statusInfo?.longitude != null) {
+      enqueue(statusInfo.longitude, statusInfo.latitude);
+    }
+
+    if (coordQueue.length) {
+      try {
+        const addrs = await apiCall('GetAddresses', {
+          coordinates: coordQueue.map(c => ({ x: c.x, y: c.y }))
+        });
+        (addrs || []).forEach((a, i) => {
+          addrMap[coordQueue[i].key] = a?.formattedAddress || null;
+        });
+        localStorage.setItem(ADDR_KEY, JSON.stringify(addrMap));
+      } catch(_) {}
+    }
+
+    // ── Build stats ───────────────────────────────────────────────────────
+    let totalKm = 0, totalDriveSec = 0, totalStops = 0;
+    sortedTrips.forEach(t => {
+      totalKm      += (t.distance || 0);
+      totalDriveSec += toSec(t.drivingDuration);
+      if (toSec(t.stopDuration) > 0) totalStops++;
+    });
+
+    // ── Render ────────────────────────────────────────────────────────────
+    const frag = document.createDocumentFragment();
+
+    // Summary bar
+    const sumEl = document.createElement('div');
+    sumEl.className = 'summary';
+    sumEl.innerHTML = `
+      <div class="sum-item">
+        <div class="sum-val">${sortedTrips.length}</div>
+        <div class="sum-lbl">Viagens</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${totalKm.toFixed(1)}</div>
+        <div class="sum-lbl">km</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${fmtDur(totalDriveSec)}</div>
+        <div class="sum-lbl">Condução</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${totalStops}</div>
+        <div class="sum-lbl">Paragens</div>
+      </div>`;
+    frag.appendChild(sumEl);
+
+    // Chronological trip + stop cards
+    sortedTrips.forEach((trip, i) => {
+      const startT   = new Date(trip.start);
+      const stopT    = new Date(trip.stop);
+      const driveSec = toSec(trip.drivingDuration);
+      const dist     = (trip.distance || 0).toFixed(1);
+
+      // TRIP card
+      const tripEl = document.createElement('div');
+      tripEl.className = 'trip-seg';
+      tripEl.innerHTML = `
+        <div class="seg-label">Viagem ${i + 1}</div>
+        <div class="trip-timerow">${fmtTime(startT)}<span class="t-arrow">→</span>${fmtTime(stopT)}</div>
+        <div class="trip-metrics"><b>${dist} km</b> &nbsp;·&nbsp; ${fmtDur(driveSec)} condução</div>`;
+      frag.appendChild(tripEl);
+
+      // STOP card — show for any trip that has a stop point
+      if (trip.stopPoint || trip.stopDuration) {
+        const durSec  = toSec(trip.stopDuration);
+        const isLive  = !trip.stopDuration || durSec === 0;
+        const depart  = isLive ? null : new Date(stopT.getTime() + durSec * 1000);
+        const addr    = trip.stopPoint
+          ? (addrMap[coordKey2(trip.stopPoint.x, trip.stopPoint.y)] || fmtCoord(trip.stopPoint))
+          : 'Localização não disponível';
+
+        const stopEl = document.createElement('div');
+        stopEl.className = 'stop-seg';
+
+        const timingStr = isLive
+          ? `${fmtTime(stopT)} &nbsp;·&nbsp; <span class="dur">Em paragem</span>`
+          : `${fmtTime(stopT)} → ${fmtTime(depart)} &nbsp;·&nbsp; <span class="dur">${fmtDur(durSec)}</span>`;
+
+        stopEl.innerHTML = `
+          <div class="seg-label">🅿 Paragem</div>
+          <div class="stop-addr">${esc(addr)}</div>
+          <div class="stop-timing">${timingStr}</div>`;
+        frag.appendChild(stopEl);
+      }
+    });
+
+    // LIVE card — vehicle currently moving
+    if (statusInfo && (statusInfo.speed > 2 || statusInfo.isDriving)) {
+      const speed   = Math.round(statusInfo.speed || 0);
+      const liveKey = statusInfo.longitude != null
+        ? coordKey2(statusInfo.longitude, statusInfo.latitude) : null;
+      const liveAddr = liveKey
+        ? (addrMap[liveKey] || 'A localizar...')
+        : 'A localizar...';
+
+      let since = '—';
+      if (statusInfo.currentStateDuration) {
+        const sec = toSec(statusInfo.currentStateDuration);
+        const startT = new Date(Date.now() - sec * 1000);
+        since = fmtTime(startT);
+      }
+
+      const liveEl = document.createElement('div');
+      liveEl.className = 'live-seg';
+      liveEl.innerHTML = `
+        <div class="live-row">
+          <div class="live-title">🚗 Em Movimento</div>
+          <span class="live-badge">${speed} km/h</span>
+        </div>
+        <div class="live-detail">Desde ${since}</div>
+        <div class="live-detail">${esc(liveAddr)}</div>`;
+      frag.appendChild(liveEl);
+    }
+
+    body.innerHTML = '';
+    body.appendChild(frag);
+
+  } catch(ex) {
+    handleApiError(ex);
+  }
+}
+
+// ── API ERROR HANDLER ────────────────────────────────────────────────────────
+function handleApiError(ex) {
+  if (/InvalidUserException|NotAuthorizedException|DbUnavailable/i.test(ex?.message || '')) {
+    localStorage.removeItem(SESS_KEY);
+    sess = null;
+    showLogin();
+    document.getElementById('login-err').textContent = 'Sessão expirada. Inicie sessão novamente.';
+    return;
+  }
+  document.getElementById('hist-body').innerHTML = `
+    <div class="center-msg">
+      <div class="msg-icon">⚠️</div>
+      <div class="msg-title">Erro ao carregar</div>
+      <div class="msg-err">${esc(ex?.message || 'Erro desconhecido')}</div>
+      <button class="retry-btn" onclick="loadHistory()">Tentar novamente</button>
+    </div>`;
+}
+
+// ── GEOTAB API ───────────────────────────────────────────────────────────────
 async function rawCall(server, method, params) {
   const r = await fetch(`https://${server}/apiv1`, {
-    method: 'POST',
+    method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ method, params, id: 1 })
+    body:    JSON.stringify({ method, params, id: 1 })
   });
   const d = await r.json();
   if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
@@ -703,22 +706,21 @@ function apiGet(typeName, search) {
 }
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
-// Parse Geotab .NET TimeSpan: "d.HH:MM:SS" or "HH:MM:SS" or number (seconds)
 function toSec(v) {
   if (!v) return 0;
   if (typeof v === 'number') return Math.max(0, v);
   const m = String(v).match(/^(?:(\d+)\.)?(\d+):(\d+):(\d+(?:\.\d+)?)/);
   if (!m) return 0;
   return Math.max(0,
-    (parseInt(m[1]||0)) * 86400 +
-    parseInt(m[2]) * 3600 +
-    parseInt(m[3]) * 60 +
+    parseInt(m[1]||0) * 86400 +
+    parseInt(m[2])    * 3600  +
+    parseInt(m[3])    * 60    +
     parseFloat(m[4])
   );
 }
 
 function fmtDur(sec) {
-  if (sec < 60) return `${Math.round(sec)}s`;
+  if (!sec || sec < 60) return `${Math.round(sec || 0)}s`;
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
   if (h > 0) return `${h}h ${m}m`;
@@ -730,16 +732,13 @@ function fmtTime(d) {
   return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
 }
 
-function coordKey(c) {
-  if (!c || c.x == null) return '';
-  return `${c.x.toFixed(5)},${c.y.toFixed(5)}`;
+function coordKey2(x, y) {
+  return `${Number(x).toFixed(5)},${Number(y).toFixed(5)}`;
 }
 
-function resolveAddr(pt) {
-  if (!pt || pt.x == null) return 'Localização não disponível';
-  const addr = addrMap[coordKey(pt)];
-  if (addr) return addr;
-  return `${pt.y?.toFixed(5)}, ${pt.x?.toFixed(5)}`;
+function fmtCoord(pt) {
+  if (!pt) return 'Localização não disponível';
+  return `${Number(pt.y).toFixed(5)}, ${Number(pt.x).toFixed(5)}`;
 }
 
 function isoDate(d) {
@@ -757,7 +756,7 @@ function sameDay(a, b) {
 }
 
 function esc(s) {
-  return String(s)
+  return String(s||'')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
