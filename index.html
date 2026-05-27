@@ -430,7 +430,7 @@
 
 // ── CONFIG ─────────────────────────────────────────────────────────────────
 const DB       = 'feit02';
-const SESS_KEY = 'fm_sess_v2';
+const SESS_KEY = 'fm_sess_v3'; // bumped to clear sessions with wrong server path
 const ADDR_KEY = 'fm_addr_v2';
 const API_BASE = 'my.geotab.com'; // overridden by auth response path
 
@@ -475,7 +475,7 @@ async function handleLogin(e) {
       userName:  res.credentials.userName,
       sessionId: res.credentials.sessionId,
       database:  res.credentials.database,
-      server:    res.path || API_BASE
+      server:    (res.path && res.path !== 'ThisServer') ? res.path : API_BASE
     };
     localStorage.setItem(SESS_KEY, JSON.stringify(sess));
     showApp();
