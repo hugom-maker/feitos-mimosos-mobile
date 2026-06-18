@@ -674,7 +674,7 @@ async function loadHistory() {
 
 // ── API ERROR HANDLER ────────────────────────────────────────────────────────
 function handleApiError(ex) {
-  if (/InvalidUserException|NotAuthorizedException|DbUnavailable/i.test(ex?.message || '')) {
+  if (/InvalidUserException|NotAuthorizedException|DbUnavailable|Invalid session/i.test(ex?.message || '')) {
     localStorage.removeItem(SESS_KEY);
     sess = null;
     showLogin();
