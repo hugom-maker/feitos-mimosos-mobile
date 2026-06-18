@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-title" content="Feitos Mimosos">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>[DEV] Feitos Mimosos — Viagens</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
   <style>
     :root {
@@ -241,67 +240,6 @@
       border-radius: 12px; font-size: 17px; font-weight: 800;
       cursor: pointer; min-height: var(--touch);
     }
-
-    /* ── TAPPABLE CARDS ──────────────────────────────── */
-    .stop-seg, .live-seg { cursor: pointer; }
-
-    .map-btn {
-      margin-top: 10px;
-      width: 100%;
-      height: 44px;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      -webkit-appearance: none;
-      transition: opacity 0.15s;
-    }
-    .map-btn:active { opacity: 0.7; }
-
-    /* ── MAP MODAL ───────────────────────────────────── */
-    #map-modal {
-      display: none;
-      position: fixed; inset: 0; z-index: 999;
-      flex-direction: column;
-      background: var(--bg);
-    }
-    #map-modal.open { display: flex; }
-
-    .map-header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 16px;
-      padding-top: max(14px, env(safe-area-inset-top));
-      flex-shrink: 0;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .map-back {
-      background: none; border: none; color: var(--accent);
-      font-size: 28px; line-height: 1; cursor: pointer;
-      padding: 0 4px; min-width: 36px;
-    }
-    .map-title-wrap { flex: 1; min-width: 0; }
-    .map-title { font-size: 16px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .map-sub   { font-size: 13px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    #map-container {
-      flex: 1; position: relative;
-    }
-    #leaflet-map { width: 100%; height: 100%; }
-
-    .map-loading {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      background: var(--bg); gap: 12px; z-index: 10;
-    }
   </style>
 </head>
 <body>
@@ -366,25 +304,6 @@
   </div>
 </div>
 
-<!-- ─── MAP MODAL ──────────────────────────────────── -->
-<div id="map-modal">
-  <div class="map-header">
-    <button class="map-back" onclick="closeMap()" aria-label="Voltar">‹</button>
-    <div class="map-title-wrap">
-      <div class="map-title" id="map-title">Mapa</div>
-      <div class="map-sub"  id="map-sub"></div>
-    </div>
-  </div>
-  <div id="map-container">
-    <div class="map-loading" id="map-loading">
-      <div class="spinner"></div>
-      <div class="msg-sub">A carregar mapa...</div>
-    </div>
-    <div id="leaflet-map"></div>
-  </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 'use strict';
 
@@ -400,10 +319,6 @@ let selDate     = today();
 let selDeviceId = null;
 let devices     = [];
 let addrMap     = {};
-
-// map state
-let leafletMap  = null;
-let mapLayers   = [];
 
 // ── BOOTSTRAP ───────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
@@ -717,11 +632,6 @@ async function loadHistory() {
           <div class="seg-label">🅿 Paragem</div>
           <div class="stop-addr">${esc(addr)}</div>
           <div class="stop-timing">${timingStr}</div>`;
-        const stopMapBtn = document.createElement('button');
-        stopMapBtn.className = 'map-btn';
-        stopMapBtn.innerHTML = '🗺 Ver no mapa';
-        stopMapBtn.addEventListener('click', (e) => { e.stopPropagation(); openStopMap(trip, addr); });
-        stopEl.appendChild(stopMapBtn);
         frag.appendChild(stopEl);
       }
     });
@@ -751,11 +661,6 @@ async function loadHistory() {
         </div>
         <div class="live-detail">Desde ${since}</div>
         <div class="live-detail">${esc(liveAddr)}</div>`;
-      const liveMapBtn = document.createElement('button');
-      liveMapBtn.className = 'map-btn';
-      liveMapBtn.innerHTML = '🗺 Ver posição atual';
-      liveMapBtn.addEventListener('click', (e) => { e.stopPropagation(); openLiveMap(statusInfo, liveAddr); });
-      liveEl.appendChild(liveMapBtn);
       frag.appendChild(liveEl);
     }
 
@@ -765,168 +670,6 @@ async function loadHistory() {
   } catch(ex) {
     handleApiError(ex);
   }
-}
-
-// ── MAP ──────────────────────────────────────────────────────────────────────
-function initMap() {
-  if (leafletMap) return;
-  leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    subdomains: 'abcd'
-  }).addTo(leafletMap);
-}
-
-function clearMapLayers() {
-  mapLayers.forEach(l => leafletMap.removeLayer(l));
-  mapLayers = [];
-}
-
-function openMap(title, sub) {
-  document.getElementById('map-title').textContent = title;
-  document.getElementById('map-sub').textContent   = sub;
-  document.getElementById('map-loading').style.display = 'flex';
-  document.getElementById('map-modal').classList.add('open');
-  initMap();
-  // Leaflet needs the container visible before sizing
-  setTimeout(() => leafletMap.invalidateSize(), 50);
-}
-
-function closeMap() {
-  document.getElementById('map-modal').classList.remove('open');
-}
-
-async function openStopMap(trip, addr) {
-  const startT = new Date(trip.start);
-  const stopT  = new Date(trip.stop);
-  openMap(
-    `Viagem → Paragem`,
-    `${fmtTime(startT)} – ${fmtTime(stopT)} · ${esc(addr)}`
-  );
-  clearMapLayers();
-
-  try {
-    // Fetch GPS log for the trip window
-    const logs = await apiCall('Get', {
-      typeName: 'LogRecord',
-      search: {
-        deviceSearch: { id: selDeviceId },
-        fromDate: trip.start,
-        toDate:   trip.stop
-      },
-      resultsLimit: 5000
-    });
-
-    const pts = (logs || [])
-      .filter(l => l.latitude != null && l.longitude != null)
-      .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
-      .map(l => [l.latitude, l.longitude]);
-
-    if (pts.length > 1) {
-      const poly = L.polyline(pts, { color: '#FFD700', weight: 4, opacity: 0.9 });
-      poly.addTo(leafletMap);
-      mapLayers.push(poly);
-
-      // Start marker (green)
-      const startIcon = L.divIcon({ className: '', html: '<div style="width:12px;height:12px;background:#44DD88;border:2px solid #fff;border-radius:50%;"></div>', iconAnchor:[6,6] });
-      const sm = L.marker(pts[0], { icon: startIcon }).addTo(leafletMap);
-      mapLayers.push(sm);
-    }
-
-    // Stop pin (red) at stop point
-    if (trip.stopPoint) {
-      const stopLatLng = [trip.stopPoint.y, trip.stopPoint.x];
-      const stopIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;background:#FF5555;border:2px solid #fff;border-radius:50%;"></div>', iconAnchor:[8,8] });
-      const stm = L.marker(stopLatLng, { icon: stopIcon }).bindPopup(addr || 'Paragem').addTo(leafletMap);
-      mapLayers.push(stm);
-
-      if (pts.length > 1) {
-        leafletMap.fitBounds([...pts, stopLatLng], { padding: [30, 30] });
-      } else {
-        leafletMap.setView(stopLatLng, 15);
-      }
-    } else if (pts.length > 1) {
-      leafletMap.fitBounds(pts, { padding: [30, 30] });
-    }
-
-  } catch(ex) {
-    // fallback: just show stop pin if we have coords
-    if (trip.stopPoint) {
-      const stopLatLng = [trip.stopPoint.y, trip.stopPoint.x];
-      const stopIcon = L.divIcon({ className: '', html: '<div style="width:16px;height:16px;background:#FF5555;border:2px solid #fff;border-radius:50%;"></div>', iconAnchor:[8,8] });
-      const stm = L.marker(stopLatLng, { icon: stopIcon }).addTo(leafletMap);
-      mapLayers.push(stm);
-      leafletMap.setView(stopLatLng, 15);
-    }
-  }
-
-  document.getElementById('map-loading').style.display = 'none';
-  leafletMap.invalidateSize();
-}
-
-async function openLiveMap(statusInfo, addr) {
-  openMap('Posição Atual', esc(addr));
-  clearMapLayers();
-
-  const liveLat = statusInfo.latitude;
-  const liveLng = statusInfo.longitude;
-
-  try {
-    // Fetch logs from last 2 hours to show recent path to current position
-    const fromDate = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
-    const logs = await apiCall('Get', {
-      typeName: 'LogRecord',
-      search: {
-        deviceSearch: { id: selDeviceId },
-        fromDate,
-        toDate: new Date().toISOString()
-      },
-      resultsLimit: 5000
-    });
-
-    const pts = (logs || [])
-      .filter(l => l.latitude != null && l.longitude != null)
-      .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
-      .map(l => [l.latitude, l.longitude]);
-
-    // Append current live position
-    const allPts = pts.length ? [...pts, [liveLat, liveLng]] : [[liveLat, liveLng]];
-
-    if (allPts.length > 1) {
-      const poly = L.polyline(allPts, { color: '#44DD88', weight: 4, opacity: 0.9 });
-      poly.addTo(leafletMap);
-      mapLayers.push(poly);
-    }
-
-    // Live pin (green, pulsing)
-    const liveIcon = L.divIcon({
-      className: '',
-      html: `<div style="width:20px;height:20px;background:#44DD88;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(68,221,136,0.35);"></div>`,
-      iconAnchor: [10, 10]
-    });
-    const lm = L.marker([liveLat, liveLng], { icon: liveIcon })
-      .bindPopup(`🚗 ${Math.round(statusInfo.speed || 0)} km/h`)
-      .addTo(leafletMap);
-    mapLayers.push(lm);
-
-    if (allPts.length > 1) {
-      leafletMap.fitBounds(allPts, { padding: [30, 30] });
-    } else {
-      leafletMap.setView([liveLat, liveLng], 15);
-    }
-
-  } catch(_) {
-    leafletMap.setView([liveLat, liveLng], 15);
-    const liveIcon = L.divIcon({
-      className: '',
-      html: `<div style="width:20px;height:20px;background:#44DD88;border:3px solid #fff;border-radius:50%;"></div>`,
-      iconAnchor: [10, 10]
-    });
-    L.marker([liveLat, liveLng], { icon: liveIcon }).addTo(leafletMap);
-  }
-
-  document.getElementById('map-loading').style.display = 'none';
-  leafletMap.invalidateSize();
 }
 
 // ── API ERROR HANDLER ────────────────────────────────────────────────────────
