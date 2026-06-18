@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Feitos Mimosos">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>[DEV] Feitos Mimosos — Viagens</title>
+
+  <style>
+    :root {
+      --bg:      #0d0d0d;
+      --surface: #1a1a1a;
+      --card:    #232323;
+      --card2:   #1e1e1e;
+      --accent:  #FFD700;
+      --text:    #FFFFFF;
+      --text2:   #BBBBBB;
+      --text3:   #666666;
+      --danger:  #FF5555;
+      --ok:      #44DD88;
+      --border:  #333333;
+      --trip-border: #FFD700;
+      --stop-border: #555555;
+      --live-border: #44DD88;
+      --touch:   56px;
+      --radius:  14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 17px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── LOGIN ────────────────────────────────────── */
+    #login {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: 40px 28px;
+      padding-top: max(40px, env(safe-area-inset-top));
+      gap: 32px;
+    }
+    .brand { text-align: center; }
+    .brand-name { font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    .brand-sub  { font-size: 15px; color: var(--text2); margin-top: 4px; }
+
+    .login-form { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; }
+    .field-wrap { display: flex; flex-direction: column; gap: 8px; }
+    .field-label { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.6px; }
+
+    input[type="email"], input[type="password"] {
+      height: var(--touch);
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 17px;
+      padding: 0 18px;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.18s;
+      -webkit-appearance: none;
+    }
+    input:focus { border-color: var(--accent); }
+
+    .btn {
+      height: 62px; border: none; border-radius: var(--radius);
+      font-size: 19px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.15s; -webkit-appearance: none;
+    }
+    .btn:active { opacity: 0.75; }
+    .btn-primary { background: var(--accent); color: #000; width: 100%; margin-top: 6px; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
+    .login-err { min-height: 22px; color: var(--danger); font-size: 15px; text-align: center; }
+
+    /* ── APP SHELL ────────────────────────────────── */
+    #app { display: none; flex-direction: column; height: 100vh; height: -webkit-fill-available; }
+
+    /* ── HEADER ───────────────────────────────────── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px 12px;
+      padding-top: max(14px, env(safe-area-inset-top));
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .header-row1 { display: flex; align-items: center; justify-content: space-between; }
+    .header-title { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .logout-btn {
+      background: none; border: 1px solid var(--border); color: var(--text3);
+      font-size: 13px; padding: 6px 14px; border-radius: 8px; cursor: pointer; min-height: 36px;
+    }
+    .logout-btn:active { color: var(--text); border-color: var(--text2); }
+
+    /* ── DATE NAV ─────────────────────────────────── */
+    .date-nav { display: flex; align-items: center; gap: 10px; }
+    .day-btn {
+      width: var(--touch); height: var(--touch); flex-shrink: 0;
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 26px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, border-color 0.12s; -webkit-appearance: none;
+    }
+    .day-btn:active { background: var(--accent); border-color: var(--accent); color: #000; }
+    .day-btn:disabled { opacity: 0.3; cursor: default; }
+
+    .date-center {
+      flex: 1; position: relative; height: var(--touch);
+      display: flex; align-items: center; justify-content: center;
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: 12px; cursor: pointer; overflow: hidden;
+    }
+    .date-center:active { border-color: var(--accent); }
+    .date-text { text-align: center; pointer-events: none; }
+    .date-main { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.1; }
+    .date-full { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    #date-picker {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; font-size: 17px;
+      -webkit-appearance: none; border: none; background: none;
+    }
+
+    /* ── VEHICLE SELECTOR ─────────────────────────── */
+    .veh-wrap { position: relative; }
+    .veh-select {
+      width: 100%; height: var(--touch);
+      background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+      color: var(--text); font-size: 17px;
+      padding: 0 44px 0 16px;
+      -webkit-appearance: none; appearance: none; outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+    .veh-select:focus { border-color: var(--accent); }
+    .veh-select option { background: #1a1a1a; color: #fff; }
+
+    /* ── SCROLL BODY ──────────────────────────────── */
+    .hist-body {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 14px;
+      padding-bottom: max(24px, env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    /* ── SUMMARY BAR ──────────────────────────────── */
+    .summary {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 14px 12px; display: flex; justify-content: space-between; gap: 6px;
+    }
+    .sum-item { text-align: center; flex: 1; }
+    .sum-val { font-size: 20px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+    .sum-lbl { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 3px; }
+
+    /* ── TRIP SEGMENT ─────────────────────────────── */
+    .trip-seg {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--trip-border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .seg-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--text3);
+    }
+    .trip-timerow {
+      font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; line-height: 1.1;
+    }
+    .t-arrow { color: var(--text3); font-weight: 400; margin: 0 6px; }
+    .trip-metrics { font-size: 15px; color: var(--text2); }
+    .trip-metrics b { color: var(--accent); }
+
+    /* ── STOP SEGMENT ─────────────────────────────── */
+    .stop-seg {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--stop-border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .stop-addr { font-size: 15px; color: var(--text); line-height: 1.35; }
+    .stop-timing { font-size: 14px; color: var(--text2); }
+    .stop-timing .dur { color: var(--accent); font-weight: 700; }
+
+    /* ── LIVE SEGMENT ─────────────────────────────── */
+    .live-seg {
+      background: #0b2218;
+      border: 1px solid #1a4432;
+      border-left: 4px solid var(--live-border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .live-row { display: flex; align-items: center; gap: 10px; }
+    .live-title { font-size: 17px; font-weight: 800; color: var(--ok); }
+    .live-badge {
+      font-size: 12px; font-weight: 800; background: var(--ok); color: #000;
+      padding: 3px 8px; border-radius: 5px;
+    }
+    .live-detail { font-size: 14px; color: var(--text2); }
+
+    /* ── LOADING / EMPTY / ERROR ──────────────────── */
+    .center-msg {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 60px 20px; gap: 14px; text-align: center;
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .msg-icon { font-size: 46px; }
+    .msg-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .msg-sub   { font-size: 14px; color: var(--text2); }
+    .msg-err   { color: var(--danger); font-size: 14px; }
+    .retry-btn {
+      margin-top: 8px; padding: 14px 32px;
+      background: var(--accent); color: #000; border: none;
+      border-radius: 12px; font-size: 17px; font-weight: 800;
+      cursor: pointer; min-height: var(--touch);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─────────────────────────────────────── -->
+<div id="login">
+  <div class="brand">
+    <div class="brand-name">Feitos Mimosos</div>
+    <div class="brand-sub">Histórico de Viagens</div>
+  </div>
+  <form class="login-form" id="login-form" onsubmit="handleLogin(event)" novalidate>
+    <div class="field-wrap">
+      <label class="field-label" for="inp-email">Email</label>
+      <input type="email" id="inp-email" autocomplete="username"
+             placeholder="email@exemplo.pt" inputmode="email" required>
+    </div>
+    <div class="field-wrap">
+      <label class="field-label" for="inp-pass">Palavra-passe</label>
+      <input type="password" id="inp-pass" autocomplete="current-password"
+             placeholder="••••••••" required>
+    </div>
+    <div class="login-err" id="login-err" role="alert" aria-live="polite"></div>
+    <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
+  </form>
+</div>
+
+<!-- ─── APP ───────────────────────────────────────── -->
+<div id="app">
+  <div class="header">
+    <div class="header-row1">
+      <div class="header-title">Feitos Mimosos <span style="font-size:12px;font-weight:700;background:#FF5555;color:#fff;padding:2px 7px;border-radius:5px;vertical-align:middle;letter-spacing:0.5px;">DEV</span></div>
+      <button class="logout-btn" onclick="handleLogout()">Sair</button>
+    </div>
+
+    <div class="date-nav">
+      <button class="day-btn" id="prev-btn" onclick="shiftDate(-1)" aria-label="Dia anterior">‹</button>
+      <div class="date-center" role="button" aria-label="Abrir seletor de data">
+        <div class="date-text">
+          <div class="date-main" id="date-main">Hoje</div>
+          <div class="date-full" id="date-full"></div>
+        </div>
+        <input type="date" id="date-picker" aria-label="Selecionar data"
+               onchange="handlePickerChange(this.value)">
+      </div>
+      <button class="day-btn" id="next-btn" onclick="shiftDate(1)" aria-label="Próximo dia">›</button>
+    </div>
+
+    <div class="veh-wrap">
+      <select id="veh-select" class="veh-select"
+              onchange="handleVehicleChange(this.value)"
+              aria-label="Selecionar veículo">
+        <option value="">A carregar veículos...</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="hist-body" id="hist-body">
+    <div class="center-msg">
+      <div class="spinner"></div>
+      <div class="msg-sub">A carregar...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const DB       = 'feit02';
+const SESS_KEY = 'fm_sess_v3_dev';
+const ADDR_KEY = 'fm_addr_v2';
+const API_BASE = 'my.geotab.com';
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let sess        = null;
+let selDate     = today();
+let selDeviceId = null;
+let devices     = [];
+let addrMap     = {};
+
+// ── BOOTSTRAP ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  try { addrMap = JSON.parse(localStorage.getItem(ADDR_KEY) || '{}'); } catch(_) {}
+
+  const raw = localStorage.getItem(SESS_KEY);
+  if (raw) {
+    try {
+      sess = JSON.parse(raw);
+      showApp();
+      await loadDevices();
+      return;
+    } catch(_) { sess = null; }
+  }
+  showLogin();
+});
+
+// ── AUTH ────────────────────────────────────────────────────────────────────
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('inp-email').value.trim();
+  const pass  = document.getElementById('inp-pass').value;
+  const btn   = document.getElementById('login-btn');
+  const err   = document.getElementById('login-err');
+
+  btn.textContent = 'A entrar...';
+  btn.disabled = true;
+  err.textContent = '';
+
+  try {
+    const res = await rawCall(API_BASE, 'Authenticate', {
+      userName: email, password: pass, database: DB
+    });
+    sess = {
+      userName:  res.credentials.userName,
+      sessionId: res.credentials.sessionId,
+      database:  res.credentials.database,
+      server:    (res.path && res.path !== 'ThisServer') ? res.path : API_BASE
+    };
+    localStorage.setItem(SESS_KEY, JSON.stringify(sess));
+    localStorage.setItem('fm_email', sess.userName);
+    localStorage.setItem('fm_pass',  pass);
+    showApp();
+    await loadDevices();
+  } catch(ex) {
+    err.textContent = 'Email ou palavra-passe incorretos. Tente novamente.';
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem(SESS_KEY);
+  sess = null;
+  selDeviceId = null;
+  // keep fm_email so login form stays pre-filled after logout
+  devices = [];
+  document.getElementById('inp-email').value = '';
+  document.getElementById('inp-pass').value = '';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('login-btn').textContent = 'Entrar';
+  document.getElementById('login-btn').disabled = false;
+  showLogin();
+}
+
+// ── SCREENS ─────────────────────────────────────────────────────────────────
+function showLogin() {
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('app').style.display   = 'none';
+  const savedEmail = localStorage.getItem('fm_email');
+  const savedPass  = localStorage.getItem('fm_pass');
+  if (savedEmail) document.getElementById('inp-email').value = savedEmail;
+  if (savedPass)  document.getElementById('inp-pass').value  = savedPass;
+  if (savedEmail && savedPass) {
+    setTimeout(() => document.getElementById('login-btn').focus(), 100);
+  } else if (savedEmail) {
+    setTimeout(() => document.getElementById('inp-pass').focus(), 100);
+  }
+}
+function showApp() {
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display   = 'flex';
+  renderDateHeader();
+}
+
+// ── DATE NAV ────────────────────────────────────────────────────────────────
+function today() {
+  const d = new Date(); d.setHours(0,0,0,0); return d;
+}
+
+function shiftDate(delta) {
+  const d = new Date(selDate); d.setDate(d.getDate() + delta);
+  if (d > today()) return;
+  selDate = d;
+  renderDateHeader();
+  loadHistory();
+}
+
+function handlePickerChange(val) {
+  if (!val) return;
+  const [y,m,dd] = val.split('-').map(Number);
+  const d = new Date(y, m-1, dd);
+  if (d > today()) return;
+  selDate = d;
+  renderDateHeader();
+  loadHistory();
+}
+
+function renderDateHeader() {
+  const t    = today();
+  const yest = new Date(t); yest.setDate(t.getDate() - 1);
+  let label;
+  if (sameDay(selDate, t))         label = 'Hoje';
+  else if (sameDay(selDate, yest)) label = 'Ontem';
+  else label = selDate.toLocaleDateString('pt-PT', {day:'2-digit', month:'short', year:'numeric'});
+
+  document.getElementById('date-main').textContent = label;
+  document.getElementById('date-full').textContent =
+    selDate.toLocaleDateString('pt-PT', {weekday:'long', day:'2-digit', month:'long'});
+  document.getElementById('date-picker').value = isoDate(selDate);
+  document.getElementById('next-btn').disabled = sameDay(selDate, t);
+}
+
+// ── VEHICLES ────────────────────────────────────────────────────────────────
+async function loadDevices() {
+  const sel = document.getElementById('veh-select');
+  try {
+    const devs = await apiGet('Device', {});
+    devices = (devs || [])
+      .filter(d => d.name && d.name.trim())
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt'));
+
+    sel.innerHTML = '<option value="">Selecionar veículo...</option>';
+    devices.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      sel.appendChild(opt);
+    });
+
+    // Restore last selected vehicle
+    const lastVeh = localStorage.getItem('fm_last_veh');
+    if (lastVeh && devices.find(d => d.id === lastVeh)) {
+      sel.value = lastVeh;
+      selDeviceId = lastVeh;
+      await loadHistory();
+    } else {
+      showPrompt();
+    }
+  } catch(ex) {
+    sel.innerHTML = '<option value="">Erro ao carregar veículos</option>';
+    handleApiError(ex);
+  }
+}
+
+function handleVehicleChange(id) {
+  selDeviceId = id || null;
+  if (selDeviceId) {
+    localStorage.setItem('fm_last_veh', selDeviceId);
+    loadHistory();
+  } else {
+    showPrompt();
+  }
+}
+
+function showPrompt() {
+  document.getElementById('hist-body').innerHTML = `
+    <div class="center-msg">
+      <div class="msg-icon">🚗</div>
+      <div class="msg-title">Selecione um veículo</div>
+      <div class="msg-sub">para ver o histórico de viagens</div>
+    </div>`;
+}
+
+// ── HISTORY LOADER ───────────────────────────────────────────────────────────
+async function loadHistory() {
+  if (!selDeviceId) { showPrompt(); return; }
+  const body = document.getElementById('hist-body');
+  body.innerHTML = `<div class="center-msg"><div class="spinner"></div><div class="msg-sub">A carregar histórico...</div></div>`;
+
+  try {
+    const fromDate  = localMidnight(selDate).toISOString();
+    const toDate    = new Date(localMidnight(selDate).getTime() + 86400000 - 1).toISOString();
+    const isToday   = sameDay(selDate, today());
+
+    // Fetch trips and (if today) current device status in parallel
+    const [trips, statusArr] = await Promise.all([
+      apiCall('Get', {
+        typeName: 'Trip',
+        search: { deviceSearch: { id: selDeviceId }, fromDate, toDate },
+        resultsLimit: 1000
+      }),
+      isToday
+        ? apiCall('Get', {
+            typeName: 'DeviceStatusInfo',
+            search:   { deviceSearch: { id: selDeviceId } }
+          }).catch(() => [])
+        : Promise.resolve([])
+    ]);
+
+    const statusInfo = (statusArr || [])[0] || null;
+    const sortedTrips = (trips || []).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    if (!sortedTrips.length && !statusInfo) {
+      body.innerHTML = `
+        <div class="center-msg">
+          <div class="msg-icon">🗓️</div>
+          <div class="msg-title">Sem viagens</div>
+          <div class="msg-sub">Nenhuma viagem registada para ${
+            selDate.toLocaleDateString('pt-PT', {weekday:'long', day:'2-digit', month:'long'})
+          }</div>
+        </div>`;
+      return;
+    }
+
+    // ── Collect all coordinates for batch address resolution ──────────────
+    const coordQueue = []; // {x, y, key}
+    const enqueue = (x, y) => {
+      if (x == null || y == null) return;
+      const key = coordKey2(x, y);
+      if (!addrMap[key] && !coordQueue.find(c => c.key === key)) {
+        coordQueue.push({ x, y, key });
+      }
+    };
+
+    sortedTrips.forEach(t => {
+      if (t.stopPoint) enqueue(t.stopPoint.x, t.stopPoint.y);
+    });
+    if (statusInfo?.longitude != null) {
+      enqueue(statusInfo.longitude, statusInfo.latitude);
+    }
+
+    if (coordQueue.length) {
+      try {
+        const addrs = await apiCall('GetAddresses', {
+          coordinates: coordQueue.map(c => ({ x: c.x, y: c.y }))
+        });
+        (addrs || []).forEach((a, i) => {
+          addrMap[coordQueue[i].key] = a?.formattedAddress || null;
+        });
+        localStorage.setItem(ADDR_KEY, JSON.stringify(addrMap));
+      } catch(_) {}
+    }
+
+    // ── Build stats ───────────────────────────────────────────────────────
+    let totalKm = 0, totalDriveSec = 0, totalStops = 0;
+    sortedTrips.forEach(t => {
+      totalKm      += (t.distance || 0);
+      totalDriveSec += toSec(t.drivingDuration);
+      if (toSec(t.stopDuration) > 0) totalStops++;
+    });
+
+    // ── Render ────────────────────────────────────────────────────────────
+    const frag = document.createDocumentFragment();
+
+    // Summary bar
+    const sumEl = document.createElement('div');
+    sumEl.className = 'summary';
+    sumEl.innerHTML = `
+      <div class="sum-item">
+        <div class="sum-val">${sortedTrips.length}</div>
+        <div class="sum-lbl">Viagens</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${totalKm.toFixed(1)}</div>
+        <div class="sum-lbl">km</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${fmtDur(totalDriveSec)}</div>
+        <div class="sum-lbl">Condução</div>
+      </div>
+      <div class="sum-item">
+        <div class="sum-val">${totalStops}</div>
+        <div class="sum-lbl">Paragens</div>
+      </div>`;
+    frag.appendChild(sumEl);
+
+    // Chronological trip + stop cards
+    sortedTrips.forEach((trip, i) => {
+      const startT   = new Date(trip.start);
+      const stopT    = new Date(trip.stop);
+      const driveSec = toSec(trip.drivingDuration);
+      const dist     = (trip.distance || 0).toFixed(1);
+
+      // TRIP card
+      const tripEl = document.createElement('div');
+      tripEl.className = 'trip-seg';
+      tripEl.innerHTML = `
+        <div class="seg-label">Viagem ${i + 1}</div>
+        <div class="trip-timerow">${fmtTime(startT)}<span class="t-arrow">→</span>${fmtTime(stopT)}</div>
+        <div class="trip-metrics"><b>${dist} km</b> &nbsp;·&nbsp; ${fmtDur(driveSec)} condução</div>`;
+      frag.appendChild(tripEl);
+
+      // STOP card — show for any trip that has a stop point
+      if (trip.stopPoint || trip.stopDuration) {
+        const durSec  = toSec(trip.stopDuration);
+        const isLive  = !trip.stopDuration || durSec === 0;
+        const depart  = isLive ? null : new Date(stopT.getTime() + durSec * 1000);
+        const addr    = trip.stopPoint
+          ? (addrMap[coordKey2(trip.stopPoint.x, trip.stopPoint.y)] || fmtCoord(trip.stopPoint))
+          : 'Localização não disponível';
+
+        const stopEl = document.createElement('div');
+        stopEl.className = 'stop-seg';
+
+        const timingStr = isLive
+          ? `${fmtTime(stopT)} &nbsp;·&nbsp; <span class="dur">Em paragem</span>`
+          : `${fmtTime(stopT)} → ${fmtTime(depart)} &nbsp;·&nbsp; <span class="dur">${fmtDur(durSec)}</span>`;
+
+        stopEl.innerHTML = `
+          <div class="seg-label">🅿 Paragem</div>
+          <div class="stop-addr">${esc(addr)}</div>
+          <div class="stop-timing">${timingStr}</div>`;
+        frag.appendChild(stopEl);
+      }
+    });
+
+    // LIVE card — vehicle currently moving
+    if (statusInfo && (statusInfo.speed > 2 || statusInfo.isDriving)) {
+      const speed   = Math.round(statusInfo.speed || 0);
+      const liveKey = statusInfo.longitude != null
+        ? coordKey2(statusInfo.longitude, statusInfo.latitude) : null;
+      const liveAddr = liveKey
+        ? (addrMap[liveKey] || 'A localizar...')
+        : 'A localizar...';
+
+      let since = '—';
+      if (statusInfo.currentStateDuration) {
+        const sec = toSec(statusInfo.currentStateDuration);
+        const startT = new Date(Date.now() - sec * 1000);
+        since = fmtTime(startT);
+      }
+
+      const liveEl = document.createElement('div');
+      liveEl.className = 'live-seg';
+      liveEl.innerHTML = `
+        <div class="live-row">
+          <div class="live-title">🚗 Em Movimento</div>
+          <span class="live-badge">${speed} km/h</span>
+        </div>
+        <div class="live-detail">Desde ${since}</div>
+        <div class="live-detail">${esc(liveAddr)}</div>`;
+      frag.appendChild(liveEl);
+    }
+
+    body.innerHTML = '';
+    body.appendChild(frag);
+
+  } catch(ex) {
+    handleApiError(ex);
+  }
+}
+
+// ── API ERROR HANDLER ────────────────────────────────────────────────────────
+function handleApiError(ex) {
+  if (/InvalidUserException|NotAuthorizedException|DbUnavailable|Invalid session/i.test(ex?.message || '')) {
+    localStorage.removeItem(SESS_KEY);
+    sess = null;
+    showLogin();
+    document.getElementById('login-err').textContent = 'Sessão expirada. Inicie sessão novamente.';
+    return;
+  }
+  document.getElementById('hist-body').innerHTML = `
+    <div class="center-msg">
+      <div class="msg-icon">⚠️</div>
+      <div class="msg-title">Erro ao carregar</div>
+      <div class="msg-err">${esc(ex?.message || 'Erro desconhecido')}</div>
+      <button class="retry-btn" onclick="loadHistory()">Tentar novamente</button>
+    </div>`;
+}
+
+// ── GEOTAB API ───────────────────────────────────────────────────────────────
+async function rawCall(server, method, params) {
+  const r = await fetch(`https://${server}/apiv1`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ method, params, id: 1 })
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  return d.result;
+}
+
+function apiCall(method, params) {
+  return rawCall(sess.server, method, {
+    ...params,
+    credentials: {
+      userName:  sess.userName,
+      sessionId: sess.sessionId,
+      database:  sess.database
+    }
+  });
+}
+
+function apiGet(typeName, search) {
+  return apiCall('Get', { typeName, search });
+}
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function toSec(v) {
+  if (!v) return 0;
+  if (typeof v === 'number') return Math.max(0, v);
+  const m = String(v).match(/^(?:(\d+)\.)?(\d+):(\d+):(\d+(?:\.\d+)?)/);
+  if (!m) return 0;
+  return Math.max(0,
+    parseInt(m[1]||0) * 86400 +
+    parseInt(m[2])    * 3600  +
+    parseInt(m[3])    * 60    +
+    parseFloat(m[4])
+  );
+}
+
+function fmtDur(sec) {
+  if (!sec || sec < 60) return `${Math.round(sec || 0)}s`;
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function fmtTime(d) {
+  if (!d) return '—';
+  return d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+}
+
+function coordKey2(x, y) {
+  return `${Number(x).toFixed(5)},${Number(y).toFixed(5)}`;
+}
+
+function fmtCoord(pt) {
+  if (!pt) return 'Localização não disponível';
+  return `${Number(pt.y).toFixed(5)}, ${Number(pt.x).toFixed(5)}`;
+}
+
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function localMidnight(d) {
+  const m = new Date(d); m.setHours(0,0,0,0); return m;
+}
+
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
