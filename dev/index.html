@@ -243,15 +243,27 @@
     }
 
     /* ── TAPPABLE CARDS ──────────────────────────────── */
-    .stop-seg, .live-seg {
+    .stop-seg, .live-seg { cursor: pointer; }
+
+    .map-btn {
+      margin-top: 10px;
+      width: 100%;
+      height: 44px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 800;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-appearance: none;
       transition: opacity 0.15s;
     }
-    .stop-seg:active, .live-seg:active { opacity: 0.7; }
-    .tap-hint {
-      font-size: 11px; color: var(--text3);
-      margin-top: 5px; display: flex; align-items: center; gap: 4px;
-    }
+    .map-btn:active { opacity: 0.7; }
 
     /* ── MAP MODAL ───────────────────────────────────── */
     #map-modal {
@@ -704,9 +716,12 @@ async function loadHistory() {
         stopEl.innerHTML = `
           <div class="seg-label">🅿 Paragem</div>
           <div class="stop-addr">${esc(addr)}</div>
-          <div class="stop-timing">${timingStr}</div>
-          <div class="tap-hint">🗺 Ver no mapa</div>`;
-        stopEl.addEventListener('click', () => openStopMap(trip, addr));
+          <div class="stop-timing">${timingStr}</div>`;
+        const stopMapBtn = document.createElement('button');
+        stopMapBtn.className = 'map-btn';
+        stopMapBtn.innerHTML = '🗺 Ver no mapa';
+        stopMapBtn.addEventListener('click', (e) => { e.stopPropagation(); openStopMap(trip, addr); });
+        stopEl.appendChild(stopMapBtn);
         frag.appendChild(stopEl);
       }
     });
@@ -735,9 +750,12 @@ async function loadHistory() {
           <span class="live-badge">${speed} km/h</span>
         </div>
         <div class="live-detail">Desde ${since}</div>
-        <div class="live-detail">${esc(liveAddr)}</div>
-        <div class="tap-hint">🗺 Ver posição atual</div>`;
-      liveEl.addEventListener('click', () => openLiveMap(statusInfo, liveAddr));
+        <div class="live-detail">${esc(liveAddr)}</div>`;
+      const liveMapBtn = document.createElement('button');
+      liveMapBtn.className = 'map-btn';
+      liveMapBtn.innerHTML = '🗺 Ver posição atual';
+      liveMapBtn.addEventListener('click', (e) => { e.stopPropagation(); openLiveMap(statusInfo, liveAddr); });
+      liveEl.appendChild(liveMapBtn);
       frag.appendChild(liveEl);
     }
 
@@ -753,8 +771,9 @@ async function loadHistory() {
 function initMap() {
   if (leafletMap) return;
   leafletMap = L.map('leaflet-map', { zoomControl: true, attributionControl: false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd'
   }).addTo(leafletMap);
 }
 
